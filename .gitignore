@@ -1,2 +1,6 @@
-*.stl
+right*.stl
+left*.stl
+Entretoise*.stl
+backplate*.stl
+Support*.stl
 OpenSCAD\ -\ Surface\(\)\ from\ PNG\ and\ difference\(\)*

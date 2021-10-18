@@ -35,7 +35,7 @@ module nutCase() {
 }
 
 screw_positions=[
-    [-7, -3]
+    [-7, 3]
 ];
 
 
@@ -58,9 +58,10 @@ difference() {
         translate(position) translate([0, 0, -4-screw_spacer_height]) cylinder(r=  screw_hole_radius, h=screw_spacer_height+   main_rectangle_height+8);
 }
 
-translate([5, 0, 0]) difference() {
-    cylinder(r = 4, h = 4);
+translate([5, 0, 0]) difference()
+{
+    cylinder(r = 4, h = 5-0.1);
     translate([0, 0, 2]) screwInsert();
 }
 
-translate([-7, 3, main_rectangle_height]) linear_extrude(0.3) text("1.6", 4, halign="center");
+translate([-7, -7, main_rectangle_height]) linear_extrude(0.3) text("1.6", 4, halign="center");
