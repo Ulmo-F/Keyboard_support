@@ -1,9 +1,24 @@
+        // Ajuster profondeur mur du fond (aligner avec la plate)
+        // Mur du fond D/G, plus trou pour vis, de la bonne epaisseur
+// Ajuster les cases/inserts
+// découpe en 2
+// cales d'ajustement pour les 2 parties
+// Minimiser inclinaison & hauteur
+
+
+
 pcb_width = 311;
 pcb_depth = 120;
-pcb_height = 1;
+pcb_height = 1.7;
 pcb_margin = 5;
 main_rectangle_height = 3;
 keyboard_inclinaison = 15;
+
+plate_width = 307;
+plate_depth = 117.6;
+plate_height = 1.3;
+plate_offset= [2, 2];
+pcb_plate_gap = 6.5;// - pcb_height - plate_height;
 
 bluepill_width = 23;
 bluepill_depth = 53;
@@ -24,6 +39,10 @@ screw_positions=[
     [41, 108], [118, 108], [192, 108], [270, 108]
 ];
 
+back_depth = 14;
+back_width = 20;
+back_point = [0, plate_depth + 2, -pcb_plate_gap - screw_spacer_height];
+
 screw_insert_outer_radius = 4/2;
 screw_insert_inner_radius = 3/2;
 screw_insert_outer_height = 1;
@@ -41,15 +60,15 @@ screw_insert_inner_height_2 = 5;
 
 
 pod_radius = 10;
-    pod_positions=[
-        [2 * pod_radius, 2 * pod_radius],
-        [pcb_width-2 * pod_radius, 2 * pod_radius],
-        [pcb_width-2 * pod_radius, pcb_depth-2 * pod_radius],
-        [4 * pod_radius, pcb_depth- 3 * pod_radius],
-        [pcb_width/3, pcb_depth/2],
-        [2*pcb_width/3, pcb_depth/2],
-        [pcb_width/2, 2 * pod_radius],
-    ];
+pod_positions=[
+    [2 * pod_radius, 2 * pod_radius],
+    [pcb_width-2 * pod_radius, 2 * pod_radius],
+//    [pcb_width-2 * pod_radius, pcb_depth-2 * pod_radius],
+    [4 * pod_radius, pcb_depth- 3 * pod_radius],
+    [pcb_width/3, pcb_depth/2],
+    [2*pcb_width/3, pcb_depth/2],
+    [pcb_width/2, 2 * pod_radius],
+];
 
 
 $fn=100;
@@ -59,6 +78,16 @@ module PCB() {
     {
         translate([0, 0, -pcb_height]) cube([pcb_width, pcb_depth, pcb_height]);
         translate([-bluepill_margin, pcb_depth - bluepill_depth - bluepill_margin, -bluepill_margin]) cube([bluepill_width + 2 * bluepill_margin, bluepill_depth + 2 * bluepill_margin, bluepill_height +2 * bluepill_margin]);
+    }
+}
+
+
+module plate() {
+    color("purple")
+    {
+        translate(plate_offset)
+            translate([0, 0, -pcb_plate_gap])
+                cube([plate_width, plate_depth, plate_height]);
     }
 }
 
@@ -77,11 +106,6 @@ module pod(h, rot) {
     //}
 }
 
-module pod2(position) {
-    translate(position)
-        translate([0, 0, 50+pod_radius]) rotate([180, 0, 0]) cylinder(r=pod_radius, h=50+2*pod_radius);
-}
-
 module pods() {
     for (position = pod_positions)
         translate(position)
@@ -90,38 +114,12 @@ module pods() {
 
 }
 
-module pods2() {
-    innerness = 2 * pod_radius;
-    difference() {
-        union() {
-            translate([innerness, innerness]) pod2();
-            translate([pcb_width-innerness, innerness]) pod2();
-            translate([pcb_width/2, innerness]) pod2();
-            translate([2*innerness, pcb_depth-innerness]) pod2();
-            translate([pcb_width-innerness, pcb_depth-innerness]) pod2();
-//            translate([pcb_width/2, pcb_depth-innerness]) pod(25, 180);
-//            translate([pcb_width/2-5, pcb_depth-innerness]) pod(25, 135);
-//            translate([pcb_width/2+5, pcb_depth-innerness]) pod(25, -135);
-            translate([pcb_width/3, pcb_depth/2]) pod2();
-            translate([pcb_width*2/3, pcb_depth/2]) pod2();
-        }
-//        translate([0, 0, -15*3]) cube([pcb_width, pcb_depth, 15*3]);
-    }
-}
-
 module support() {
     translate([pcb_margin, pcb_margin, -1]) 
 //        difference() {
             cube([pcb_width - 2 * pcb_margin, pcb_depth - 2 * pcb_margin, main_rectangle_height + 1]);
-//            translate([50, 20, -1]) cube([200, 70, main_rectangle_height + 2]);
-//            translate([130, -10, -1]) cube([130, 40, main_rectangle_height + 2]);
-//            translate([130, 80, -1]) cube([40, 40, main_rectangle_height + 2]);
-//    translate([-70, -100, -1]) linear_extrude(main_rectangle_height+2) scale([2.5, 1.65, 1]) import("unicorn.svg");
-//        }
-//    for (position = screw_positions)
-//        translate([0, 0, -screw_spacer_height]) translate(position) cylinder(r=screw_spacer_radius, h=screw_spacer_height+main_rectangle_height);
     pods();
-    supportUSB();
+    back();
     nuts();
 }
 
@@ -163,49 +161,64 @@ module nutCase() {
 
 module nuts() {
     for (position = screw_positions)
-        translate([0, 0, +main_rectangle_height]) translate(position)
-    nutCase();
+        translate([0, 0, main_rectangle_height]) translate(position)
+            nutCase();
 }
 
-module supportUSB() {
-    //translate([-20, -20, 0]) 
-    translate([pcb_width/2, pcb_depth-10, 10])
-    rotate([keyboard_inclinaison, 0, 0])
-    {
-        translate([-25, -9, -8])
-        cube([50, 15, 40]);
+module back() {
+    translate(back_point) rotate([keyboard_inclinaison, 0, 0]) {
+        translate([7, -back_depth, 0])
+            difference() {
+                cube([20, back_depth, 60]);
+                translate([back_width / 2, 20, 30]) rotate([90, 0, 0]) cylinder(r=1.1, h=25);
+            }
+        translate([pcb_width - back_width - 7, -back_depth, 0])
+            difference() {
+                cube([back_width, back_depth, 60]);
+                translate([back_width / 2, 20, 30]) rotate([90, 0, 0]) cylinder(r=1.1, h=25);
+            }
+        translate([pcb_width/2, -back_depth, 0])
+        difference() {
+            translate([-25, 0, 0]) cube([50, back_depth, 60]);
+            translate([0, 7.55, 26]) {
+                rotate([0, 0, 180]) import("sock.stl");
+                translate([0, 1, 0]) rotate([0, 0, 180]) import("sock.stl");
+                translate([31.0/2-1.75, 8, 0]) rotate([90, 0, 0]) cylinder(r=1.51, h = 20);
+                translate([-31.0/2+1.75, 8, 0]) rotate([90, 0, 0]) cylinder(r=1.51, h = 20);
+                translate([0, 20, 12]) rotate([90, 0, 0]) cylinder(r=1.1, h=55);
+            }
+        }
     }
 }
 
-module priseUSB() {
-    //translate([-20, -20, 0]) 
-    translate([pcb_width/2, pcb_depth-5, 0])
-    rotate([keyboard_inclinaison, 0, 0])
-    {
-        translate([0, -3, 20])
-        rotate([0, 0, 180]) import("sock.stl");
-    }
-}
-
-difference() {
-    union() {
+module global() {
+    difference() {
         support();
+
 //        priseUSB();
+        screw_holes();
+//        bluepill_hole();
+        translate([-20, -20, 0]) rotate([keyboard_inclinaison, 0, 0]) translate([-20, -20, 0]) cube([400, 200, 500]);
+
+        translate([-pcb_margin, -pcb_margin, -200]) 
+                cube([pcb_width + 2 * pcb_margin, pcb_depth + 2 * pcb_margin, 200]);
+
+        for (position = pod_positions)
+            translate(position)
+                translate([0, 0, (position[1]+20) * tan(keyboard_inclinaison)])            rotate([keyboard_inclinaison+180, 0, 0]) screwInsert();
+
+        translate([ -150, -150, -10]) cube([300, 300, 10]);
     }
-    priseUSB();
-    screw_holes();
-//    bluepill_hole();
-    translate([-20, -20, 0]) rotate([keyboard_inclinaison, 0, 0]) translate([-20, -20, 0]) cube([400, 200, 500]);
-
-    translate([-pcb_margin, -pcb_margin, -200]) 
-            cube([pcb_width + 2 * pcb_margin, pcb_depth + 2 * pcb_margin, 200]);
-
-    for (position = pod_positions)
-        translate(position)
-            translate([0, 0, (position[1]+20) * tan(keyboard_inclinaison)])            rotate([keyboard_inclinaison+180, 0, 0]) screwInsert();
-translate([0, 0, -screw_spacer_height]) PCB();
-
-    translate([ -150, -150, -10]) cube([300, 300, 10]);
 }
-entretoises();
 
+global();
+entretoises();
+//translate([0, 0, -screw_spacer_height]) PCB();
+//translate([0, 0, -screw_spacer_height]) plate();
+
+//rotate([0, 0, 180]) import("sock.stl");
+//translate([31.0/2-1.75, 8, 0]) rotate([90, 0, 0]) cylinder(r=1.5, h = 20);
+//translate([-31.0/2+1.75, 8, 0]) rotate([90, 0, 0]) cylinder(r=1.5, h = 20);
+
+//    [pcb_width-2 * pod_radius, pcb_depth-2 * pod_radius],
+//    translate([pcb_margin, pcb_margin, 10]) cube([pcb_width - 2 * pcb_margin, pcb_depth - 2 * pcb_margin, 3]);
