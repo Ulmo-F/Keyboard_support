@@ -34,12 +34,12 @@ module nutCase(margin) {
     {
         X1 = nut_length + 4 * nut_case_width;
         Y1 = nut_length + 4 * nut_case_width;
-        Z1 = nut_height + nut_case_width;
+        Z1 = nut_height + 1 + nut_case_width;
         translate([-X1/2, -Y1/2, -overlap]) cube([X1, Y1, Z1 + overlap]);
 
         X2 = nut_length + margin;
         Y2 = nut_width + margin/2;
-        Z2 = nut_height + margin;
+        Z2 = nut_height + 1 + margin;
         translate([-X2/2, -Y2/2, -infty]) cube([X2, Y2+infty, Z2 + infty]);
     }
 }
@@ -148,4 +148,7 @@ difference() {
         translate([ 0, 10]) screwHole(screw_diam_3mm);
         translate([10, 10]) screwHole(screw_diam_3mm);
     }
+
+//translate([-5, -25, -25]) cube([100, 50, 50]);
+//translate([-55, -48, -25]) cube([100, 50, 50]);
 }
